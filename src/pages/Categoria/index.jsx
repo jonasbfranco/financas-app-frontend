@@ -84,7 +84,9 @@ function Categoria() {
             <h1>Cadastro de categoria</h1>
             <input placeholder="Nome da categoria" type="text" name='nome' ref={inputName}/>
             <input placeholder="Tipo da categoria" type="text" name='tipo' ref={inputTipo}/>
-            <button type='button' onClick={createCategorias}>Salvar</button>
+            <button type='button' onClick={createCategorias}>
+               {categoriaEditando ? 'Atualizar categoria' : 'Salvar categoria'}
+            </button>
           </form>
 
 
