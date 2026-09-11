@@ -5,6 +5,8 @@ import api from '../../services/api'
 function Categoria() {
 
   const [categorias, setCategorias] = useState([])
+  const [categoriaEditando, setCategoriaEditando] = useState(null);
+
   //let categorias = []
 
   const inputName = useRef()
@@ -20,27 +22,44 @@ function Categoria() {
 
 
   async function createCategorias() {
-    await api.post('/api/v1/categoria', {
-      nome: inputName.current.value,
-      tipo: inputTipo.current.value
-    })
 
-    // console.log(inputName);
-    getCategorias()
-    inputName.current.value = ""
-    inputTipo.current.value = ""
+    const dados = {
+      nome: inputName.current.value,
+      tipo: inputTipo.current.value,
+      ativo: "true"
+    };
+
+    try {
+
+    if (categoriaEditando) {
+      // EDITAR
+      await api.put(`/api/v1/categoria/${categoriaEditando}`, dados);
+
+    } else {
+      // CRIAR
+      await api.post('/api/v1/categoria', dados);
+
+    }
+
+    await getCategorias();
+
+    inputName.current.value = "";
+    inputTipo.current.value = "";
+
+    setCategoriaEditando(null);
+
+  } catch (error) {
+    console.error("Erro ao salvar categoria:", error);
+  }
+
 
   }
 
-   async function editCategorias(id) {
-     nome: inputName.current.value,
-     tipo: inputTipo.current.value
+   async function editCategorias(categoria) {
+    setCategoriaEditando(categoria.id);
 
-    // await api.post(`/api/v1/categoria/${id}`, {    })
-
-    // console.log(inputName);
-    // getCategorias()
-
+    inputName.current.value = categoria.nome;
+    inputTipo.current.value = categoria.tipo;
   }
 
 
@@ -77,7 +96,7 @@ function Categoria() {
                 <p>Tipo: <span>{categoria.tipo}</span></p>
               </div>
               <div className='buttonCard'>
-                <button type="button" onClick={() => editCategorias(categoria.id)}>
+                <button type="button" onClick={() => editCategorias(categoria)}>
                   ✏️
                 </button>
               </div>
