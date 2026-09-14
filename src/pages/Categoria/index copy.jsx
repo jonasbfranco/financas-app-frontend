@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from 'react'
 //import './index.css'
 import api from '../../services/api'
 import PageTitle from "../../components/PageTitle";
-import { LockKeyhole, LogIn, UserRound } from "lucide-react";
 
 
 function Categoria() {
@@ -84,28 +83,20 @@ function Categoria() {
      
       <div className="mx-auto max-w-7xl">
         
-          <PageTitle
-              title="Cadastro de Categorias - [ Receitas e Despesas ]"
-              description="Cadastre as categorias de receitas e despesas para gerenciar seu orçamento."
-          />
+          <div className="">
 
-          <div className="w-full max-w-120">
+            <div className="flex flex-col items-center justify-center w-full max-w-2xl p-8">
 
-            <form action="" className="flex flex-col mb-4 w-full">
+              <form action="" className="flex flex-col mb-4 w-full">
                 <h1 className="mt-10 max-w-xl text-3xl font-bold leading-tight mb-4 text-start">Cadastro de categoria</h1>
-                <div className="relative">
-                  <UserRound className="absolute left-3 top-1/3 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <input placeholder="Nome da categoria" type="text" name='nome' ref={inputName}
-                      className="mb-4 w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      
-                      />
-                </div>
-                <div className="relative">
-                  <LockKeyhole className="absolute left-3 top-1/3 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <input placeholder="Tipo da categoria" type="text" name='tipo' ref={inputTipo}
-                      className="mb-4 w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      />
-                </div>
+                
+                <input placeholder="Nome da categoria" type="text" name='nome' ref={inputName}
+                    className="mb-4 w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    
+                    />
+                <input placeholder="Tipo da categoria" type="text" name='tipo' ref={inputTipo}
+                    className="mb-4 w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    />
                 <button type='button' onClick={createCategorias}
                   className="mb-8 flex w-full items-center justify-center gap-2 rounded-xl bg-purple-900 px-4 py-3 font-semibold text-white transition hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
@@ -113,26 +104,23 @@ function Categoria() {
                 </button>
               </form>
 
-          </div>
 
-          <div className="w-full max-w-120">
-
-            {categorias.map( categoria => (
+              {categorias.map( categoria => (
                 
                 <div key= {categoria.id} className="grid grid-cols-4 gap-4 w-full items-center mb-4 rounded-xl bg-slate-200 p-4">
                   <div className="col-span-2">
                     <p>Nome: <span>{categoria.nome}</span></p>
                     <p>Tipo: <span>{categoria.tipo}</span></p>
                   </div>
-                  <div className="text-2xl col-span-1 text-center">
+                  <div className="text-2xl col-span-1 cursor-pointer text-center">
                     <button type="button" onClick={() => editCategorias(categoria)}
-                      className="w-full text-2xl cursor-pointer">
+                      className="w-full text-2xl">
                       ✏️
                     </button>
                   </div>
-                  <div className="text-2xl col-span-1 text-center">
+                  <div className="text-2xl col-span-1 cursor-pointer text-center">
                     <button type="button" onClick={() => deleteCategorias(categoria.id)}
-                      className="w-full text-2xl cursor-pointer" >
+                      className="w-full text-2xl" >
                       🗑️
                     </button>
                   </div>
@@ -140,9 +128,11 @@ function Categoria() {
 
               ))}
 
+            
+            </div>
           </div>
         
-      </div>
+        </div>
   )
 }
 
