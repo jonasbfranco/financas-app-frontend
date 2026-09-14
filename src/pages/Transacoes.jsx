@@ -89,8 +89,8 @@ function Transacoes() {
       <div className="mx-auto max-w-7xl">
         
           <PageTitle
-              title="Cadastro de Categorias - [ Receitas e Despesas ]"
-              description="Cadastre as categorias de receitas e despesas para gerenciar seu orçamento."
+              title="Cadastro de Transações - [ Receitas e Despesas ]"
+              description="Cadastre todas as Transações de Receitas e Despesas para gerenciar seu orçamento."
           />
 
           <div className="w-full max-w-full">
