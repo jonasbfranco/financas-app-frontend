@@ -1,8 +1,8 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL: 'https://financas-app-backend-one.vercel.app'
-    //baseURL: import.meta.env.REACT_APP_API_URL
+    // baseURL: 'https://financas-app-backend-one.vercel.app'
+    baseURL: import.meta.env.VITE_API_URL || 'https://financas-app-backend-one.vercel.app'
 });
 
 

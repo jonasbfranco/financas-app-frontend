@@ -23,8 +23,8 @@ export default function Header({ onMenu }) {
           </button>
 
           <div>
-            <p className="font-semibold text-slate-900">Sistema Corporativo</p>
-            <p className="text-xs text-slate-500">Gestão centralizada de acessos e módulos</p>
+            <p className="font-semibold text-slate-900">Sistema Financeiro</p>
+            <p className="text-xs text-slate-500">Gestão centralizada de receitas e despesas</p>
           </div>
         </div>
 

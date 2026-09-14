@@ -10,6 +10,7 @@ import CorporateLayout from './layouts/CorporateLayout';
 import Categoria from './pages/Categoria'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard';
+import Transacoes from './pages/Transacoes';
 
 
 
@@ -59,7 +60,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/transacoes",
-            element: <p>Rota de transações</p>
+            element: <Transacoes />
           },
           {
             path: "/usuarios",

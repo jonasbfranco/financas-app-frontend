@@ -71,7 +71,7 @@ function Login() {
         <section className="flex w-full items-center justify-center bg-slate-50 px-6 py-12 lg:w-1/2">
             <div className="w-full max-w-md">
                 <div className="mb-8 lg:hidden">
-                    <span className="text-xl font-bold text-slate-900">CPA</span>
+                    <span className="text-xl font-bold text-slate-900">FINAN</span>
                 </div>
 
                 <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200 sm:p-10">

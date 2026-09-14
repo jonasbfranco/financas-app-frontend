@@ -89,10 +89,10 @@ function Categoria() {
               description="Cadastre as categorias de receitas e despesas para gerenciar seu orçamento."
           />
 
-          <div className="w-full max-w-120">
+          <div className="w-full max-w-120 mt-20">
 
             <form action="" className="flex flex-col mb-4 w-full">
-                <h1 className="mt-10 max-w-xl text-3xl font-bold leading-tight mb-4 text-start">Cadastro de categoria</h1>
+                {/* <h1 className="mt-10 max-w-xl text-3xl font-bold leading-tight mb-4 text-start">Cadastro de categoria</h1> */}
                 <div className="relative">
                   <UserRound className="absolute left-3 top-1/3 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input placeholder="Nome da categoria" type="text" name='nome' ref={inputName}
@@ -114,6 +114,7 @@ function Categoria() {
               </form>
 
           </div>
+
 
           <div className="w-full max-w-120">
 

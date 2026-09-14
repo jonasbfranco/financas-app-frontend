@@ -34,6 +34,7 @@ const items = [
     icon: Blocks,
     show: () => hasPermission("MODULOS_GERENCIAR")
   },
+  
   {
     to: "/categoria",
     label: "Categorias das Finanças",
@@ -68,8 +69,8 @@ export default function Sidebar({ open, onClose }) {
       >
         <div className="flex h-20 items-center justify-between border-b border-slate-800 px-6">
           <div>
-            <p className="text-2xl font-black tracking-tight">EXEMPLO</p>
-            <p className="text-xs text-slate-400">Portal Login</p>
+            <p className="text-2xl font-black tracking-tight">FINAN</p>
+            <p className="text-xs text-slate-400">Portal Finanças</p>
           </div>
 
           <button onClick={onClose} className="rounded-lg p-2 hover:bg-slate-800 lg:hidden">
