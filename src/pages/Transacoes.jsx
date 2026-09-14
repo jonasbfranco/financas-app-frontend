@@ -86,7 +86,7 @@ function Transacoes() {
   return (
 
      
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto min-w-0 w-full max-w-7xl overflow-x-hidden">
         
           <PageTitle
               title="Cadastro de Transações - [ Receitas e Despesas ]"
@@ -256,36 +256,36 @@ function Transacoes() {
 
 
 
-         <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+         <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
 
   {/* Cabeçalho */}
   <div className="hidden bg-slate-50 px-3 py-3 text-xs font-semibold uppercase text-slate-600 lg:grid lg:grid-cols-12">
-    
-    <div className="col-span-1">
+
+    <div className="min-w-0 lg:col-span-1">
       Data
     </div>
 
-    <div className="col-span-1">
+    <div className="min-w-0 lg:col-span-1">
       Tipo
     </div>
 
-    <div className="col-span-1">
+    <div className="min-w-0 lg:col-span-1">
       Categoria
     </div>
 
-    <div className="col-span-5">
+    <div className="min-w-0 lg:col-span-5">
       Descrição
     </div>
 
-    <div className="col-span-1">
+    <div className="min-w-0 lg:col-span-1">
       Valor
     </div>
 
-    <div className="col-span-1">
+    <div className="min-w-0 lg:col-span-1">
       Status
     </div>
 
-    <div className="col-span-2">
+    <div className="min-w-0 lg:col-span-2">
       Ações
     </div>
 
@@ -297,11 +297,11 @@ function Transacoes() {
 
     <div
       key={transacao.id}
-      className="grid grid-cols-2 gap-y-4 border-b border-slate-200 px-3 py-4 lg:grid-cols-12 lg:items-center lg:gap-y-0"
+      className="grid min-w-0 grid-cols-2 gap-y-4 border-b border-slate-200 px-3 py-4 lg:grid-cols-12 lg:items-center lg:gap-y-0"
     >
 
       {/* DATA */}
-      <div className="lg:col-span-1">
+      <div className="min-w-0 lg:col-span-1">
         <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
           Data
         </p>
@@ -313,7 +313,7 @@ function Transacoes() {
 
 
       {/* TIPO */}
-      <div className="lg:col-span-1">
+      <div className="min-w-0 lg:col-span-1">
         <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
           Tipo
         </p>
@@ -331,7 +331,7 @@ function Transacoes() {
 
 
       {/* CATEGORIA */}
-      <div className="lg:col-span-1">
+      <div className="min-w-0 lg:col-span-1">
         <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
           Categoria
         </p>
@@ -343,19 +343,19 @@ function Transacoes() {
 
 
       {/* DESCRIÇÃO */}
-      <div className="col-span-2 lg:col-span-5">
+      <div className="col-span-2 min-w-0 lg:col-span-5">
         <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
           Descrição
         </p>
 
-        <span className="block text-sm text-slate-900">
+        <span className="block min-w-0 max-w-full truncate text-sm text-slate-900">
           {transacao.descricao}
         </span>
       </div>
 
 
       {/* VALOR */}
-      <div className="lg:col-span-1">
+      <div className="min-w-0 lg:col-span-1">
         <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
           Valor
         </p>
@@ -376,7 +376,7 @@ function Transacoes() {
 
 
       {/* STATUS */}
-      <div className="lg:col-span-1">
+      <div className="min-w-0 lg:col-span-1">
         <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
           Status
         </p>
@@ -396,14 +396,13 @@ function Transacoes() {
 
 
       {/* AÇÕES */}
-      <div className="col-span-2 lg:col-span-2">
+      <div className="col-span-2 min-w-0 lg:col-span-2">
         <p className="mb-2 text-xs font-semibold uppercase text-slate-500 lg:hidden">
           Ações
         </p>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
 
-          {/* EDITAR */}
           <button
             type="button"
             onClick={() => editTransacoes(transacao)}
@@ -412,7 +411,6 @@ function Transacoes() {
             Editar
           </button>
 
-          {/* EXCLUIR */}
           <button
             type="button"
             onClick={() => deleteTransacoes(transacao.id)}
@@ -429,6 +427,9 @@ function Transacoes() {
   ))}
 
 </div>
+
+
+
 
 
 
