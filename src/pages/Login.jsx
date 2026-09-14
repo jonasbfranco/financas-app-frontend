@@ -23,7 +23,7 @@ function Login() {
         setLoading(true);
 
         try {
-            const { data } = await api.post("/api/v1/login", form);
+            const { data } = await api.post("api/v1/login", form);
             
             //console.log(data)
 

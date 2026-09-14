@@ -1,9 +1,10 @@
 import axios from 'axios'
 
 const api = axios.create({
-    // baseURL: 'https://financas-app-backend-one.vercel.app'
-    baseURL: import.meta.env.REACT_APP_API_URL || "http://localhost:3000"
+    baseURL: 'https://financas-app-backend-one.vercel.app'
+    //baseURL: import.meta.env.REACT_APP_API_URL
 });
+
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
