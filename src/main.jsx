@@ -51,23 +51,23 @@ const router = createBrowserRouter([
         element: <CorporateLayout />,
         children: [
           {
-            path: "/dashboard",
+            path: "dashboard",
             element: <Dashboard />
           },
           {
-            path: "/home",
+            path: "home",
             element: <p>Rota de home</p>
           },
           {
-            path: "/transacoes",
+            path: "transacoes",
             element: <Transacoes />
           },
           {
-            path: "/usuarios",
+            path: "usuarios",
             element: <p>Rota de usuários</p>
           },
           {
-            path: "/categoria",
+            path: "categoria",
             element: <Categoria />
           },
         ]
