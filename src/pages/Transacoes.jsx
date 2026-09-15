@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 //import './index.css'
 import api from '../services/api'
 import PageTitle from "../components/PageTitle";
-import { LockKeyhole, LogIn, UserRound } from "lucide-react";
+import { LockKeyhole, LogIn, Search, UserRound } from "lucide-react";
 
 
 function Transacoes() {
@@ -89,7 +89,7 @@ function Transacoes() {
       <div className="mx-auto min-w-0 w-full max-w-7xl overflow-x-hidden">
         
           <PageTitle
-              title="Cadastro de Transações - [ Receitas e Despesas ]"
+              title="Cadastro de Transações"
               description="Cadastre todas as Transações de Receitas e Despesas para gerenciar seu orçamento."
           />
 
@@ -122,10 +122,11 @@ function Transacoes() {
                       <select
                         id="tipo"
                         className={inputClass}
+                        required
                       >
-                        <option>Selecione</option>
-                        <option>Receita</option>
-                        <option>Despesa</option>
+                        <option value="">Selecione</option>
+                        <option value="RECEITA">Receita</option>
+                        <option value="DESPESA">Despesa</option>
                       </select>
                     </div>
 
@@ -143,7 +144,7 @@ function Transacoes() {
                         disabled
                         className={inputClass}
                       >
-                        <option>Selecione o tipo primeiro</option>
+                        <option value="">Selecione o tipo primeiro</option>
                       </select>
                     </div>
 
@@ -194,6 +195,28 @@ function Transacoes() {
 
                     <div>
                       <label
+                        for="tipodepagamento"
+                        className="mb-1.5 block text-sm font-semibold text-slate-900"
+                      >
+                        Tipo <span>*</span>
+                      </label>
+
+                      <select
+                        id="tipodepagamento"
+                        className={inputClass}
+                      >
+                        <option value="">Selecione</option>
+                        <option value="PIX">Pix</option>
+                        <option value="CREDITO">Credito</option>
+                        <option value="DEBITO">Debito</option>
+                        <option value="DEBITO CC">Debito C. Corrente</option>
+                        <option value="VALE REFEICAO">Vale Refeição</option>
+                      </select>
+                    </div>
+
+
+                    <div>
+                      <label
                         for="data"
                         className="mb-1.5 block text-sm font-semibold text-slate-900"
                       >
@@ -220,9 +243,9 @@ function Transacoes() {
                         id="status"
                         className={inputClass}
                       >
-                        <option>Pendente</option>
-                        <option>Pago</option>
-                        <option>Cancelado</option>
+                        <option value="PENDENTE">Pendente</option>
+                        <option value="PAGO">Pago</option>
+                        <option value="CANCELADO">Cancelado</option>
                       </select>
                     </div>
 
@@ -233,7 +256,7 @@ function Transacoes() {
                     className="mt-8 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end"
                   >
                     <button
-                      type="button"
+                      type="reset"
                       className="h-11 rounded-lg bg-slate-100 px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
                     >
                       Limpar
@@ -253,6 +276,20 @@ function Transacoes() {
               </form>
 
             </div>
+
+
+
+          {/* PESQUISA */}
+          <div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/3 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <input placeholder="Digite o texto para buscar" type="text" name='tipo' 
+                  className="mb-4 w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  />
+            </div>
+          </div>
+
+
 
 
 

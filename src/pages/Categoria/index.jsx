@@ -85,7 +85,7 @@ function Categoria() {
       <div className="mx-auto max-w-7xl">
         
           <PageTitle
-              title="Cadastro de Categorias - [ Receitas e Despesas ]"
+              title="Cadastro de Categorias"
               description="Cadastre as categorias de receitas e despesas para gerenciar seu orçamento."
           />
 
