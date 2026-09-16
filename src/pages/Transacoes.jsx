@@ -283,7 +283,7 @@ function Transacoes() {
           <div>
             <div className="relative">
               <Search className="absolute left-3 top-1/3 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input placeholder="Digite o texto para buscar" type="text" name='tipo' 
+              <input placeholder="Pesquise pela transação" type="text" name='tipo' 
                   className="mb-4 w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   />
             </div>
@@ -438,8 +438,17 @@ function Transacoes() {
           Ações
         </p>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
 
+          <button
+            type="button"
+            onClick={() => deleteTransacoes(transacao.id)}
+            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+          >
+            {/* {u.ativo === false ? "Ativar" : "Desativar"} */}
+            Desativar
+          </button>
+          
           <button
             type="button"
             onClick={() => editTransacoes(transacao)}
