@@ -1,487 +1,370 @@
-import { useEffect, useState, useRef } from 'react'
-//import './index.css'
-import api from '../services/api'
+import { Pencil, Plus, Search, Trash } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import api from "../services/api";
 import PageTitle from "../components/PageTitle";
-import { LockKeyhole, LogIn, Search, UserRound } from "lucide-react";
+import { getCurrentUser } from "../utils/auth";
 
 
-function Transacoes() {
+const forma_pagamento = [
+  {
+    "id": 1,
+    "nome": "Pix"
+  },
+  {
+    "id": 2,
+    "nome": "Crédito"
+  },
+  {
+    "id": 3,
+    "nome": "Débito"
+  },
+  {
+    "id": 4,
+    "nome": "Débito CC"
+  },
+  {
+    "id": 5,
+    "nome": "Vale refeição"
+  },
+]
 
-  const [transacoes, setTransacoes] = useState([])
-  const [transacoesEditando, setTransacoesEditando] = useState(null);
 
-  
 
-  const inputName = useRef()
-  const inputTipo = useRef()
+const status_pgto = [
+  {
+    "id": 1,
+    "nome": "Pago"
+  },
+  {
+    "id": 2,
+    "nome": "Pendente"
+  },
+]
 
-  async function getTransacoes() {
-    const transacoesFromApi = await api.get('/api/v1/transactions')
 
-    setTransacoes(transacoesFromApi.data.transacao);
-    console.log(transacoesFromApi.data.transacao);
 
+function capitalize(texto) {
+  if (!texto) return "";
+
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+}
+
+const emptyForm = {
+  id: null,
+  usuario_id: "",
+  categoria_id: "",
+  tipo: "",
+  valor: "",
+  forma_pagamento: "",
+  data: "",
+  status: "",
+  descricao: ""
+};
+
+export default function Transacoes() {
+  const user = getCurrentUser();
+  const [transacoes, setTransacoes] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [form, setForm] = useState(emptyForm);
+  const [showForm, setShowForm] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [status, setStatus] = useState("");
+
+  async function carregar() {
+    //const u = await api.get("/api/v1/transactions");
+    //const c = await api.get("/api/v1/categoria");
+    const [t, c] = await Promise.all([
+      api.get("/api/v1/transactions"),
+      api.get("/api/v1/categoria")
+    ]);
+    //return console.log(u.data.usuarios);
+    setTransacoes(t.data.transacao);
+    setCategorias(c.data.categoria);
+    //setPerfis(p.data);
   }
-
-
-  async function createTransacoes() {
-
-    const dados = {
-      nome: inputName.current.value,
-      tipo: inputTipo.current.value,
-      ativo: "true"
-    };
-
-    try {
-
-    if (transacoesEditando) {
-      // EDITAR
-      await api.put(`/api/v1/transactions/${transacoesEditando}`, dados);
-
-    } else {
-      // CRIAR
-      await api.post('/api/v1/transactions', dados);
-
-    }
-
-    await getTransacoes();
-
-    inputName.current.value = "";
-    inputTipo.current.value = "";
-
-    setTransacoesEditando(null);
-
-  } catch (error) {
-    console.error("Erro ao salvar categoria:", error);
-  }
-
-
-  }
-
-   async function editTransacoes(categoria) {
-    setTransacoesEditando(categoria.id);
-
-    inputName.current.value = categoria.nome;
-    inputTipo.current.value = categoria.tipo;
-  }
-
-
-  async function deleteTransacoes(id) {
-    await api.delete(`/api/v1/transactions/${id}`)
-
-    getTransacoes()
-
-  }
-
 
 
   useEffect(() => {
-    getTransacoes()
-  },[])
- 
-  const inputClass = "h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+    carregar().catch(() => setStatus("Não foi possível carregar as transações."));
+  }, []);
 
+
+  const filtrados = useMemo(() => {
+    const q = busca.toLowerCase();
+    return transacoes.filter((t) =>
+      [t.categoria_id, t.data, t.tipo, t.valor, t.forma_pagamento, t.status, t.descricao].some((v) =>
+        String(v || "").toLowerCase().includes(q)
+      )
+    );
+  }, [transacoes, busca]);
+
+
+
+  function novo() {
+  setForm({
+      ...emptyForm,
+      usuario_id: user.id
+    });
+
+    setShowForm(true);
+    setStatus("");
+  }
+
+
+
+  function editar(transacao) {
+    setForm({
+      id: transacao.id,
+      usuario_id: transacao.usuario_id,
+      categoria_id: transacao.categoria_id,
+      tipo: transacao.tipo,
+      valor: transacao.valor,
+      forma_pagamento: transacao.forma_pagamento,
+      data: transacao.data,
+      status: transacao.status,
+      descricao: transacao.descricao
+    });
+    setShowForm(true);
+    setStatus("");
+  }
+
+
+
+  async function salvar(e) {
+    e.preventDefault();
+    try {
+      const payload = { ...form };
+      // if (!payload.senha) delete payload.senha;
+      // if (!payload.usuario_id) payload.user.id;
+
+      if (form.id) {
+        await api.put(`/api/v1/transactions/${form.id}`, payload);
+        setStatus("Transação atualizada com sucesso.");
+      } else {
+        await api.post("/api/v1/transactions", payload);
+        setStatus("Transação criada com sucesso.");
+      }
+
+      setShowForm(false);
+      await carregar();
+    } catch (error) {
+      setStatus(error.response?.data?.message || "Erro ao salvar transação.");
+    }
+  }
+
+
+
+  async function alternarAtivo(transacao) {
+    try {
+      await api.patch(`/api/v1/transactions/${transacao.id}/status`, { ativo: !transacao.ativo });
+      await carregar();
+    } catch (error) {
+      setStatus(error.response?.data?.message || "Erro ao alterar status.");
+    }
+  }
+
+
+
+  async function excluir(transacao){
+    try {
+      await api.delete(`/api/v1/transactions/${transacao.id}`);
+      await carregar();
+    } catch (error) {
+      setStatus(error.response?.data?.message || "Erro ao excluir transação.");
+    }
+  }
+
+
+  function limparFormulario() {
+  setForm({
+    ...emptyForm,
+    usuario_id: user.id
+  });
+}
 
 
   return (
+    <div className="mx-auto max-w-7xl w-full min-w-0">
+      <PageTitle
+        title="Transações"
+        description="Cadastre, edite e controle os gastos."
+        action={
+          <button onClick={novo} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+            <Plus className="h-4 w-4" />
+            Nova transação
+          </button>
+        }
+      />
 
-     
-      <div className="mx-auto min-w-0 w-full max-w-7xl overflow-x-hidden">
-        
-          <PageTitle
-              title="Cadastro de Transações"
-              description="Cadastre todas as Transações de Receitas e Despesas para gerenciar seu orçamento."
-          />
+      {status && (
+        <div className="mb-5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+          {status}
+        </div>
+      )}
 
-          <div className="w-full max-w-full">
+      
 
-            
-            <section className="flex flex-col justify-center items-start">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-700">Nova transação</h2>
-                <p className="text-sm text-slate-500">Registre uma receita ou despesa.</p>
-              </div>
-            </section>
-
-
-
-              <form action="" className="flex mb-4 w-full">
-
-                <div className="w-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 mt-4">
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-
-                    <div>
-                      <label
-                        for="tipo"
-                        className="mb-1.5 block text-sm font-semibold text-slate-900"
-                      >
-                        Tipo <span>*</span>
-                      </label>
-
-                      <select
-                        id="tipo"
-                        className={inputClass}
-                        required
-                      >
-                        <option value="">Selecione</option>
-                        <option value="RECEITA">Receita</option>
-                        <option value="DESPESA">Despesa</option>
-                      </select>
-                    </div>
-
-                  
-                    <div>
-                      <label
-                        for="categoria"
-                        className="mb-1.5 block text-sm font-semibold text-slate-900"
-                      >
-                        Categoria <span>*</span>
-                      </label>
-
-                      <select
-                        id="categoria"
-                        disabled
-                        className={inputClass}
-                      >
-                        <option value="">Selecione o tipo primeiro</option>
-                      </select>
-                    </div>
-
-                  
-                    <div className="lg:col-span-1">
-                      <label
-                        for="descricao"
-                        className="mb-1.5 block text-sm font-semibold text-slate-900"
-                      >
-                        Descrição <span>*</span>
-                      </label>
-
-                      <input
-                        id="descricao"
-                        type="text"
-                        placeholder="Ex.: Salário, supermercado, aluguel..."
-                        className={inputClass}
-                      />
-                    </div>
-
-                  
-                    <div>
-                      <label
-                        for="valor"
-                        className="mb-1.5 block text-sm font-semibold text-slate-900"
-                      >
-                        Valor <span>*</span>
-                      </label>
-
-                      <div
-                        className="flex h-11 overflow-hidden rounded-lg border border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100"
-                      >
-                        <span
-                          className="flex w-11 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-50 text-sm text-slate-500"
-                        >
-                          R$
-                        </span>
-
-                        <input
-                          id="valor"
-                          type="text"
-                          placeholder="0,00"
-                          className="min-w-0 flex-1 border-0 px-3.5 text-base text-slate-900 outline-none placeholder:text-slate-400"
-                        />
-                      </div>
-                    </div>
-
-
-                    <div>
-                      <label
-                        for="tipodepagamento"
-                        className="mb-1.5 block text-sm font-semibold text-slate-900"
-                      >
-                        Tipo <span>*</span>
-                      </label>
-
-                      <select
-                        id="tipodepagamento"
-                        className={inputClass}
-                      >
-                        <option value="">Selecione</option>
-                        <option value="PIX">Pix</option>
-                        <option value="CREDITO">Credito</option>
-                        <option value="DEBITO">Debito</option>
-                        <option value="DEBITO CC">Debito C. Corrente</option>
-                        <option value="VALE REFEICAO">Vale Refeição</option>
-                      </select>
-                    </div>
-
-
-                    <div>
-                      <label
-                        for="data"
-                        className="mb-1.5 block text-sm font-semibold text-slate-900"
-                      >
-                        Data <span>*</span>
-                      </label>
-
-                      <input
-                        id="data"
-                        type="date"
-                        className={inputClass}
-                      />
-                    </div>
-
-
-                    <div>
-                      <label
-                        for="status"
-                        className="mb-1.5 block text-sm font-semibold text-slate-900"
-                      >
-                        Status <span>*</span>
-                      </label>
-
-                      <select
-                        id="status"
-                        className={inputClass}
-                      >
-                        <option value="PENDENTE">Pendente</option>
-                        <option value="PAGO">Pago</option>
-                        <option value="CANCELADO">Cancelado</option>
-                      </select>
-                    </div>
-
-                  </div>
-
-
-                  <div
-                    className="mt-8 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end"
-                  >
-                    <button
-                      type="reset"
-                      className="h-11 rounded-lg bg-slate-100 px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
-                    >
-                      Limpar
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="h-11 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >
-                      Salvar transação
-                    </button>
-                  </div>
-
-                </div>
-
-
-              </form>
-
-            </div>
-
-
-
-          {/* PESQUISA */}
+      {showForm && (
+        <form onSubmit={salvar} className="mb-6 w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/3 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input placeholder="Pesquise pela transação" type="text" name='tipo' 
-                  className="mb-4 w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                  />
-            </div>
+
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              {form.id ? "Editar transação" : "Nova transação"}
+            </h2>
+            <button type="button" onClick={() => setShowForm(false)} className="text-sm font-medium text-slate-500 hover:text-slate-900">
+              Cancelar
+            </button>
           </div>
 
+          <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 
+            <div>
+              <label htmlFor="tipo" className="mb-1.5 block text-sm font-semibold text-slate-900"> Tipo <span>*</span></label>
+              <select value={form.tipo} onChange={(e) => setForm({...form, tipo:e.target.value, categoria_id: ""})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                <option value="">Selecione um tipo</option>
+                  <option value="RECEITA">Receita</option>
+                  <option value="DESPESA">Despesa</option>
+              </select>
+            </div>
 
+            <div>
+              <label htmlFor="categoria_id" className="mb-1.5 block text-sm font-semibold text-slate-900"> Categoria <span>*</span></label>
+              <select value={form.categoria_id} disabled={!form.tipo} onChange={(e) => setForm({...form, categoria_id:e.target.value})} className="rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                <option value=""> {form.tipo ? "Selecione" : "Primeiro selecione o tipo"}</option>
+                {categorias.filter((c) => c.tipo === form.tipo  && c.ativo).map((c) => <option key={c.id} value={c.id}>{capitalize(c.nome)}</option>)}
+              </select>
+            </div>
 
+            <div>
+              <label htmlFor="descricao" className="mb-1.5 block text-sm font-semibold text-slate-900"> Descrção <span>*</span></label>
+                <input required placeholder="Ex.: Salário, supermercado..." value={form.descricao} onChange={(e) => setForm({...form, descricao:e.target.value})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
+            </div>
+            
+            <div>
+              <label htmlFor="valor" className="mb-1.5 block text-sm font-semibold text-slate-900"> Valor <span>*</span></label>
+              <div className="flex overflow-hidden rounded-lg border border-slate-300 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                <span className="px-4 py-3 flex w-11 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-50 text-sm text-slate-500">
+                  R$
+                </span>
+                <input required placeholder="Valor" value={form.valor} onChange={(e) => setForm({...form, valor:e.target.value})} className="min-w-full rounded-xl border=0 border-slate-300 px-4 py-3 outline-none" />
+              </div>
+            </div>
 
-         <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div>
+              <label htmlFor="forma_pagamento" className="mb-1.5 block text-sm font-semibold text-slate-900"> Forma de Pgto <span>*</span></label>
+              <select value={form.forma_pagamento} onChange={(e) => setForm({...form, forma_pagamento:e.target.value})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+              <option value=""> Selecione a forma de pgto </option>
+              {forma_pagamento.map((c) => <option key={c.id} value={c.nome}>{capitalize(c.nome)}</option>)}
+            </select>
+            </div>
+            
+            <div>
+              <label htmlFor="data" className="mb-1.5 block text-sm font-semibold text-slate-900"> Data <span>*</span></label>
+              <input required type="date" placeholder="Data" value={form.data} onChange={(e) => setForm({...form, data:e.target.value})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100" />
+            </div>
 
-  {/* Cabeçalho */}
-  <div className="hidden bg-slate-50 px-3 py-3 text-xs font-semibold uppercase text-slate-600 lg:grid lg:grid-cols-12">
+             <div>
+              <label htmlFor="status" className="mb-1.5 block text-sm font-semibold text-slate-900"> Status do Pgto <span>*</span></label>
+              <select value={form.status} onChange={(e) => setForm({...form, status:e.target.value})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+              <option value=""> Selecione o tipo </option>
+              {status_pgto.map((c) => <option key={c.id} value={c.nome.toUpperCase()}>{capitalize(c.nome)}</option>)}
+            </select>
+            </div>
 
-    <div className="min-w-0 lg:col-span-1">
-      Data
-    </div>
+            {/* <div className="flex items-end justify-end">
+              <button className="min-w-full h-13 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white hover:bg-slate-800">
+                Salvar transação
+              </button>
+            </div> */}
 
-    <div className="min-w-0 lg:col-span-1">
-      Tipo
-    </div>
+          </div>
 
-    <div className="min-w-0 lg:col-span-1">
-      Categoria
-    </div>
+            
+            <div className="mt-8 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+              <button onClick={limparFormulario} type="button" className="h-11 rounded-lg bg-slate-100 px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-200">
+                Limpar
+              </button>
 
-    <div className="min-w-0 lg:col-span-5">
-      Descrição
-    </div>
+              <button type="submit" className="h-11 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700">
+                Salvar transação
+              </button>
+            </div>
+            
+          </div>
+        </form>
+      )}
 
-    <div className="min-w-0 lg:col-span-1">
-      Valor
-    </div>
-
-    <div className="min-w-0 lg:col-span-1">
-      Status
-    </div>
-
-    <div className="min-w-0 lg:col-span-2">
-      Ações
-    </div>
-
-  </div>
-
-
-  {/* Transações */}
-  {transacoes.map((transacao) => (
-
-    <div
-      key={transacao.id}
-      className="grid min-w-0 grid-cols-2 gap-y-4 border-b border-slate-200 px-3 py-4 lg:grid-cols-12 lg:items-center lg:gap-y-0"
-    >
-
-      {/* DATA */}
-      <div className="min-w-0 lg:col-span-1">
-        <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
-          Data
-        </p>
-
-        <span className="text-sm text-slate-900">
-          {new Date(transacao.data).toLocaleDateString("pt-BR")}
-        </span>
-      </div>
-
-
-      {/* TIPO */}
-      <div className="min-w-0 lg:col-span-1">
-        <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
-          Tipo
-        </p>
-
-        <span
-          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-            transacao.tipo === "RECEITA"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {transacao.tipo}
-        </span>
-      </div>
-
-
-      {/* CATEGORIA */}
-      <div className="min-w-0 lg:col-span-1">
-        <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
-          Categoria
-        </p>
-
-        <span className="text-sm text-slate-900">
-          {transacao.categoria_id}
-        </span>
-      </div>
-
-
-      {/* DESCRIÇÃO */}
-      <div className="col-span-2 min-w-0 lg:col-span-5">
-        <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
-          Descrição
-        </p>
-
-        <span className="block min-w-0 max-w-full truncate text-sm text-slate-900">
-          {transacao.descricao}
-        </span>
-      </div>
-
-
-      {/* VALOR */}
-      <div className="min-w-0 lg:col-span-1">
-        <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
-          Valor
-        </p>
-
-        <span
-          className={`text-sm font-semibold ${
-            transacao.tipo === "RECEITA"
-              ? "text-green-600"
-              : "text-red-600"
-          }`}
-        >
-          {transacao.tipo === "RECEITA" ? "+" : "-"} R${" "}
-          {Number(transacao.valor).toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-          })}
-        </span>
-      </div>
-
-
-      {/* STATUS */}
-      <div className="min-w-0 lg:col-span-1">
-        <p className="text-xs font-semibold uppercase text-slate-500 lg:hidden">
-          Status
-        </p>
-
-        <span
-          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-            transacao.status === "PAGO"
-              ? "bg-green-100 text-green-700"
-              : transacao.status === "PENDENTE"
-              ? "bg-yellow-100 text-yellow-700"
-              : "bg-slate-100 text-slate-600"
-          }`}
-        >
-          {transacao.status}
-        </span>
-      </div>
-
-
-      {/* AÇÕES */}
-      <div className="col-span-2 min-w-0 lg:col-span-2">
-        <p className="mb-2 text-xs font-semibold uppercase text-slate-500 lg:hidden">
-          Ações
-        </p>
-
-        <div className="flex gap-2">
-
-          <button
-            type="button"
-            onClick={() => deleteTransacoes(transacao.id)}
-            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
-          >
-            {/* {u.ativo === false ? "Ativar" : "Desativar"} */}
-            Desativar
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => editTransacoes(transacao)}
-            className="rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-50"
-          >
-            Editar
-          </button>
-
-          <button
-            type="button"
-            onClick={() => deleteTransacoes(transacao.id)}
-            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
-          >
-            Excluir
-          </button>
-
-        </div>
-      </div>
-
-    </div>
-
-  ))}
-
-</div>
-
-
-
-
-
-
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 p-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar usuário..."
+              className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500"
+            />
+          </div>
         </div>
 
-  )
+        <div className="w-full min-w-0 overflow-x-auto">
+          <table className="w-full min-w-full]">
+            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="uppercase text-xs text-center px-5 py-3">Data</th>
+                <th className="uppercase text-xs text-center px-5 py-3">Tipo</th>
+                <th className="uppercase text-xs text-center px-5 py-3">Categoria</th>
+                <th className="uppercase text-xs text-left   px-0 py-3">Descrição</th>
+                <th className="uppercase text-xs text-center px-5 py-3">Valor</th>
+                <th className="uppercase text-xs text-center px-5 py-3">Status</th>
+                <th className="uppercase text-xs text-center px-0 py-3">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtrados.map((u) => (
+                <tr key={u.id} className="hover:bg-slate-50">
+                  <td className="text-center text-xs font-semibold text-slate-500">{new Date(u.data).toLocaleDateString("pt-BR")}</td>
+                  <td className="text-center font-semibold text-slate-500"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold 
+                      ${u.tipo === "RECEITA"  ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{u.tipo}</span></td>
+                  
+                  
+                  <td className="text-center text-xs font-semibold text-slate-500">
+                    {categorias.find(categoria => Number(categoria.id) === Number(u.categoria_id))?.nome}
+                    {/* {categorias.find(categoria => categoria.id == u.categoria_id)?.nome} */}
+                  </td>
+                  
+                  
+                  <td className="text-left text-xs font-semibold truncate text-slate-500">{u.descricao }</td>
+                  <td className="text-center text-md uppercase font-semibold text-slate-500">
+                      <span className={`text-sm font-semibold ${u.tipo === "RECEITA" ? "text-green-600" : "text-red-600"}`}>
+                        {u.tipo === "RECEITA" ? "+" : "-"} R${" "}
+                        {Number(u.valor).toLocaleString("pt-BR", {minimumFractionDigits: 2,})}</span></td>
+                  <td className="text-center text-md font-semibold text-slate-500">
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                          u.status === "PAGO" ? "bg-green-100 text-green-700"
+                          : u.status === "PENDENTE" ? "bg-yellow-100 text-yellow-700" : "bg-slate-100 text-slate-600" }`}
+                        >{u.status }</span>
+                  </td>
+                  <td className="flex justify-center items-center text-xs font-semibold px-0 py-4">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => editar(u)} className="rounded-lg p-2 text-slate-500 hover:bg-blue-50 hover:text-blue-600" title="Editar">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => excluir(u)} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600" title="Excluir">
+                        <Trash className="h-4 w-4" />
+                      </button>
+                      {/* <button onClick={() => alternarAtivo(u)} className={`rounded-lg p-2 ${u.ativo ? "text-slate-500 hover:bg-red-50 hover:text-red-600" : "text-emerald-600 hover:bg-emerald-50"}`} title={u.ativo ? "Inativar" : "Ativar"}>
+                        <Power className="h-4 w-4" />
+                      </button> */}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 }
-
-export default Transacoes

@@ -47,6 +47,12 @@ const items = [
     icon: CircleDollarSign,
     show: () => true
   },
+  {
+    to: "/admin/usuarios",
+    label: "Usuários",
+    icon: Users,
+    show: () => true
+  },
 ];
 
 export default function Sidebar({ open, onClose }) {

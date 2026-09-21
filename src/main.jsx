@@ -7,10 +7,11 @@ import './index.css'
 import { getCurrentUser, hasPermission } from "./utils/auth";
 
 import CorporateLayout from './layouts/CorporateLayout';
-import Categoria from './pages/Categoria'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard';
+import Categoria from './pages/Categoria'
 import Transacoes from './pages/Transacoes';
+import Usuarios from './pages/Usuarios.jsx'   
 
 
 
@@ -63,8 +64,8 @@ const router = createBrowserRouter([
             element: <Transacoes />
           },
           {
-            path: "usuarios",
-            element: <p>Rota de usuários</p>
+            path: "admin/usuarios",
+            element: <Usuarios />
           },
           {
             path: "categoria",
