@@ -28,4 +28,10 @@ export default defineConfig({
 
 ```
 
-###
+### Próximos passos
+
+- Paginação em transações e categorias
+- Em transações inserir filtro de mês corrente das transações e sempre filtrar pelo mes correte now()
+- Filtro por mes das transações
+- Acertar a cor das box do dashboard - as boxes que nao sao de valores positivos e negativos
+- Acertar a tabela das transações na exibição mobile

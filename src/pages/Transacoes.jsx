@@ -113,20 +113,49 @@ export default function Transacoes() {
 
 
   function editar(transacao) {
+
+    const formaPagamento = forma_pagamento.find(
+      (c) =>
+        c.nome.toLowerCase() ===
+        String(transacao.forma_pagamento).toLowerCase()
+    );
+
+  const statusPagamento = status_pgto.find(
+    (c) =>
+      c.nome.toUpperCase() ===
+      String(transacao.status).toUpperCase()
+  );
+
+
     setForm({
       id: transacao.id,
       usuario_id: transacao.usuario_id,
       categoria_id: transacao.categoria_id,
       tipo: transacao.tipo,
       valor: transacao.valor,
-      forma_pagamento: transacao.forma_pagamento,
-      data: transacao.data,
-      status: transacao.status,
+      // forma_pagamento: transacao.forma_pagamento,
+      // data: transacao.data,
+      // status: transacao.status,
+
+      // Pega o nome padronizado do array
+      forma_pagamento: formaPagamento?.nome || "",
+
+    // Corrige a data para o input type="date"
+      data: transacao.data
+        ? String(transacao.data).substring(0, 10)
+        : "",
+
+    // Mantém o padrão utilizado pelo seu select
+      status: statusPagamento
+        ? statusPagamento.nome.toUpperCase()
+        : "",
+
       descricao: transacao.descricao
     });
     setShowForm(true);
     setStatus("");
   }
+
 
 
 
@@ -253,7 +282,7 @@ export default function Transacoes() {
 
             <div>
               <label htmlFor="forma_pagamento" className="mb-1.5 block text-sm font-semibold text-slate-900"> Forma de Pgto <span>*</span></label>
-              <select value={form.forma_pagamento} onChange={(e) => setForm({...form, forma_pagamento:e.target.value})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+              <select value={form.forma_pagamento} onChange={(e) => setForm({...form, forma_pagamento: e.target.value})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
               <option value=""> Selecione a forma de pgto </option>
               {forma_pagamento.map((c) => <option key={c.id} value={c.nome}>{capitalize(c.nome)}</option>)}
             </select>
@@ -344,7 +373,7 @@ export default function Transacoes() {
                         <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
                           u.status === "PAGO" ? "bg-green-100 text-green-700"
                           : u.status === "PENDENTE" ? "bg-yellow-100 text-yellow-700" : "bg-slate-100 text-slate-600" }`}
-                        >{u.status }</span>
+                        >{u.status}</span>
                   </td>
                   <td className="flex justify-center items-center text-xs font-semibold px-0 py-4">
                     <div className="flex justify-end gap-2">
