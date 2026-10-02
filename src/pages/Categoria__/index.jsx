@@ -5,7 +5,7 @@ import PageTitle from "../../components/PageTitle";
 import { LockKeyhole, LogIn, UserRound } from "lucide-react";
 
 
-function Categoria() {
+function Categoriaa() {
 
   const [categorias, setCategorias] = useState([])
   const [categoriaEditando, setCategoriaEditando] = useState(null);
@@ -147,4 +147,4 @@ function Categoria() {
   )
 }
 
-export default Categoria
+export default Categoriaa
