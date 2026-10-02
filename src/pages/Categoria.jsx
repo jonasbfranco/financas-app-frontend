@@ -8,8 +8,7 @@ import { getCurrentUser } from "../utils/auth";
   const emptyForm = {
     id: null,
     nome: "",
-    tipo: "",
-    ativo: ""
+    tipo: ""
   };
 
 
@@ -17,10 +16,10 @@ export default function Categoria() {
 
   const user = getCurrentUser();
   const [categorias, setCategorias] = useState([])
-  const [categoriaEditando, setCategoriaEditando] = useState(null);
   const [busca, setBusca] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [status, setStatus] = useState("");
 
 
   async function carregar() {
@@ -98,6 +97,7 @@ export default function Categoria() {
     try {
       await api.delete(`/api/v1/categoria/${categoria.id}`);
       await carregar();
+      showForm(false);
     } catch (error) {
       setStatus(error.response?.data?.message || "Erro ao excluir categoria.");
     }
@@ -113,9 +113,9 @@ export default function Categoria() {
 
 
 
-  async function alternarAtivo(user) {
+  async function alternarAtivo(categoria) {
     try {
-      await api.patch(`/api/v1/categoria/${user.id}/status`, { ativo: !user.ativo });
+      await api.patch(`/api/v1/categoria/${categoria.id}/status`, { ativo: !categoria.ativo });
       await carregar();
     } catch (error) {
       setStatus(error.response?.data?.message || "Erro ao alterar status.");
@@ -172,7 +172,7 @@ export default function Categoria() {
         
                     <div>
                       <label htmlFor="tipo" className="mb-1.5 block text-sm font-semibold text-slate-900"> Tipo <span>*</span></label>
-                      <select value={form.tipo} onChange={(e) => setForm({...form, tipo:e.target.value, categoria_id: ""})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                      <select value={form.tipo} onChange={(e) => setForm({...form, tipo:e.target.value})} className="min-w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                         <option value="">Selecione um tipo</option>
                           <option value="RECEITA">Receita</option>
                           <option value="DESPESA">Despesa</option>

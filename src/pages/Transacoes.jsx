@@ -198,6 +198,7 @@ export default function Transacoes() {
     try {
       await api.delete(`/api/v1/transactions/${transacao.id}`);
       await carregar();
+      showForm(false);
     } catch (error) {
       setStatus(error.response?.data?.message || "Erro ao excluir transação.");
     }
