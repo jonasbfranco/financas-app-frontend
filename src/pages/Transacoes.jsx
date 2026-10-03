@@ -1,4 +1,4 @@
-import { Pencil, Plus, Search, Trash } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import PageTitle from "../components/PageTitle";
@@ -49,6 +49,34 @@ function capitalize(texto) {
   return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
 }
 
+function mesAtual() {
+  const hoje = new Date();
+  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function alterarMes(mesSelecionado, quantidade) {
+  const [ano, mes] = mesSelecionado.split("-").map(Number);
+  const novaData = new Date(ano, mes - 1 + quantidade, 1);
+
+  return `${novaData.getFullYear()}-${String(novaData.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function informacoesDoMes(mesSelecionado) {
+  const [ano, mes] = mesSelecionado.split("-").map(Number);
+  const primeiroDia = new Date(ano, mes - 1, 1);
+  const ultimoDia = new Date(ano, mes, 0);
+
+  const nomesMeses = [
+    "JAN", "FEV", "MAR", "ABR", "MAI", "JUN",
+    "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"
+  ];
+
+  return {
+    mesAno: `${nomesMeses[mes - 1]} ${ano}`,
+    periodo: `${String(primeiroDia.getDate()).padStart(2, "0")}/${String(mes).padStart(2, "0")} a ${String(ultimoDia.getDate()).padStart(2, "0")}/${String(mes).padStart(2, "0")}`
+  };
+}
+
 const emptyForm = {
   id: null,
   usuario_id: "",
@@ -69,24 +97,34 @@ export default function Transacoes() {
   const [showForm, setShowForm] = useState(false);
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
+  const [mesSelecionado, setMesSelecionado] = useState(mesAtual);
 
-  async function carregar() {
-    //const u = await api.get("/api/v1/transactions");
-    //const c = await api.get("/api/v1/categoria");
+  const informacoesMes = useMemo(
+    () => informacoesDoMes(mesSelecionado),
+    [mesSelecionado]
+  );
+
+  async function carregar(mes = mesSelecionado) {
     const [t, c] = await Promise.all([
-      api.get("/api/v1/transactions"),
+      api.get(`/api/v1/transactions?mes=${mes}`),
       api.get("/api/v1/categoria")
     ]);
-    //return console.log(u.data.usuarios);
+
     setTransacoes(t.data.transacao);
     setCategorias(c.data.categoria);
-    //setPerfis(p.data);
   }
-
 
   useEffect(() => {
     carregar().catch(() => setStatus("Não foi possível carregar as transações."));
-  }, []);
+  }, [mesSelecionado]);
+
+  function navegarMes(quantidade) {
+    setStatus("");
+    setBusca("");
+    setMesSelecionado((mesAtualSelecionado) =>
+      alterarMes(mesAtualSelecionado, quantidade)
+    );
+  }
 
 
   const filtrados = useMemo(() => {
@@ -326,13 +364,46 @@ export default function Transacoes() {
       )}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-4">
-          <div className="relative max-w-md">
+        <div className="flex flex-col gap-4 border-b border-slate-200 p-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <CalendarDays className="h-4 w-4 text-slate-500" />
+
+              <div className="min-w-[118px]">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                  {informacoesMes.mesAno}
+                </div>
+                <div className="text-xs font-semibold text-slate-700">
+                  {informacoesMes.periodo}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navegarMes(-1)}
+                className="rounded-lg p-1 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                title="Mês anterior"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navegarMes(1)}
+                className="rounded-lg p-1 text-slate-500 transition hover:bg-white hover:text-slate-900"
+                title="Próximo mês"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar usuário..."
+              placeholder="Buscar transação..."
               className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500"
             />
           </div>
