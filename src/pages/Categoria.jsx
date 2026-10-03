@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import api from '../services/api'
 import PageTitle from "../components/PageTitle";
-import { Pencil, Plus, Search, Trash, UserCheck, Power } from "lucide-react";
+import { Pencil, Plus, Search, Trash, UserCheck, UserX, Power } from "lucide-react";
 import { getCurrentUser } from "../utils/auth";
 
 
@@ -75,7 +75,24 @@ export default function Categoria() {
       // if (!payload.senha) delete payload.senha;
       // if (!payload.usuario_id) payload.user.id;
 
+       /* const payload = {
+        nome: form.nome,
+        tipo: form.tipo,
+        ativo: Boolean(form.ativo)
+       }; */
+
+      // console.log("FORM:", form);
+      // console.log("PAYLOAD:", payload);
+      // console.log("TIPO DO ATIVO:", typeof payload.ativo);
+
       if (form.id) {
+        /* console.log({
+          nome: form.nome,
+          tipo: form.tipo,
+          ativo: form.ativo,
+          tipoAtivo: typeof form.ativo
+        }); */
+
         await api.put(`/api/v1/categoria/${form.id}`, payload);
         setStatus("Categoria atualizada com sucesso.");
       } else {
@@ -86,6 +103,8 @@ export default function Categoria() {
       setShowForm(false);
       await carregar();
     } catch (error) {
+      console.error("ERRO:", error);
+      console.error("RESPOSTA:", error.response?.data);
       setStatus(error.response?.data?.message || "Erro ao salvar categoria.");
     }
   }
