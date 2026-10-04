@@ -35,3 +35,6 @@ export default defineConfig({
 - Filtro por mes das transações
 - Acertar a cor das box do dashboard - as boxes que nao sao de valores positivos e negativos
 - Acertar a tabela das transações na exibição mobile
+
+
+Observação: o campo de busca atual continua funcionando sobre as transações que já foram carregadas no navegador. Eu propositalmente não mexi nisso agora, para manter o escopo desta etapa pequeno. Se depois quisermos uma busca que encontre uma transação mesmo que ela ainda não tenha sido carregada pelo infinite scroll, aí vale levar a busca para o backend.

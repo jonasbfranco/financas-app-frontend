@@ -1,5 +1,5 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../services/api";
 import PageTitle from "../components/PageTitle";
 import { getCurrentUser } from "../utils/auth";
@@ -98,25 +98,86 @@ export default function Transacoes() {
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState("");
   const [mesSelecionado, setMesSelecionado] = useState(mesAtual);
+  const [pagina, setPagina] = useState(1);
+  const [temMais, setTemMais] = useState(true);
+  const [carregando, setCarregando] = useState(false);
+  const sentinelaRef = useRef(null);
 
   const informacoesMes = useMemo(
     () => informacoesDoMes(mesSelecionado),
     [mesSelecionado]
   );
 
-  async function carregar(mes = mesSelecionado) {
-    const [t, c] = await Promise.all([
-      api.get(`/api/v1/transactions?mes=${mes}`),
-      api.get("/api/v1/categoria")
-    ]);
+  async function carregar(paginaSolicitada = 1, substituir = true, mes = mesSelecionado) {
+    if (carregando) return;
 
-    setTransacoes(t.data.transacao);
-    setCategorias(c.data.categoria);
+    setCarregando(true);
+
+    try {
+      const params = new URLSearchParams({
+        mes,
+        page: String(paginaSolicitada),
+        limit: "20"
+      });
+
+      const requests = [
+        api.get(`/api/v1/transactions?${params.toString()}`)
+      ];
+
+      if (paginaSolicitada === 1 && categorias.length === 0) {
+        requests.push(api.get("/api/v1/categoria"));
+      }
+
+      const [t, c] = await Promise.all(requests);
+
+      if (substituir) {
+        setTransacoes(t.data.transacao);
+      } else {
+        setTransacoes((anteriores) => [...anteriores, ...t.data.transacao]);
+      }
+
+      if (c) {
+        setCategorias(c.data.categoria);
+      }
+
+      setPagina(paginaSolicitada);
+      setTemMais(Boolean(t.data.temMais));
+    } finally {
+      setCarregando(false);
+    }
   }
 
   useEffect(() => {
-    carregar().catch(() => setStatus("Não foi possível carregar as transações."));
+    setPagina(1);
+    setTemMais(true);
+    setBusca("");
+
+    carregar(1, true, mesSelecionado).catch(() =>
+      setStatus("Não foi possível carregar as transações.")
+    );
   }, [mesSelecionado]);
+
+  useEffect(() => {
+    const sentinela = sentinelaRef.current;
+    if (!sentinela) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+
+        if (entry.isIntersecting && temMais && !carregando) {
+          carregar(pagina + 1, false).catch(() =>
+            setStatus("Não foi possível carregar mais transações.")
+          );
+        }
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(sentinela);
+
+    return () => observer.disconnect();
+  }, [pagina, temMais, carregando, mesSelecionado]);
 
   function navegarMes(quantidade) {
     setStatus("");
@@ -213,7 +274,9 @@ export default function Transacoes() {
       }
 
       setShowForm(false);
-      await carregar();
+      setPagina(1);
+      setTemMais(true);
+      await carregar(1, true);
     } catch (error) {
       setStatus(error.response?.data?.message || "Erro ao salvar transação.");
     }
@@ -235,8 +298,10 @@ export default function Transacoes() {
   async function excluir(transacao){
     try {
       await api.delete(`/api/v1/transactions/${transacao.id}`);
-      await carregar();
-      showForm(false);
+      setPagina(1);
+      setTemMais(true);
+      await carregar(1, true);
+      setShowForm(false);
     } catch (error) {
       setStatus(error.response?.data?.message || "Erro ao excluir transação.");
     }
@@ -464,6 +529,15 @@ export default function Transacoes() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div ref={sentinelaRef} className="flex min-h-12 items-center justify-center px-4 py-3">
+          {carregando && (
+            <span className="text-xs font-medium text-slate-500">Carregando mais transações...</span>
+          )}
+          {!carregando && !temMais && transacoes.length > 0 && (
+            <span className="text-xs text-slate-400">Fim das transações deste mês.</span>
+          )}
         </div>
       </div>
     </div>
