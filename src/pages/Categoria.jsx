@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import api from '../services/api'
 import PageTitle from "../components/PageTitle";
 import { Pencil, Plus, Search, Trash, UserCheck, UserX, Power } from "lucide-react";
-import { getCurrentUser } from "../utils/auth";
+// import { getCurrentUser } from "../utils/auth";
 
 
   const emptyForm = {
@@ -14,7 +14,7 @@ import { getCurrentUser } from "../utils/auth";
 
 export default function Categoria() {
 
-  const user = getCurrentUser();
+  // const user = getCurrentUser();
   const [categorias, setCategorias] = useState([])
   const [busca, setBusca] = useState("");
   const [showForm, setShowForm] = useState(false);
