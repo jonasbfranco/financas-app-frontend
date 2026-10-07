@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import api from '../services/api'
 import PageTitle from "../components/PageTitle";
 import { Pencil, Plus, Search, Trash, UserCheck, UserX, Power } from "lucide-react";
@@ -20,29 +20,49 @@ export default function Categoria() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("");
+  const [pagina, setPagina] = useState(1);
+  const [temMais, setTemMais] = useState(true);
+  const [carregando, setCarregando] = useState(false);
+  const sentinelaRef = useRef(null);
+  const buscaTimerRef = useRef(null);
 
 
-  async function carregar() {
-    const c = await api.get("/api/v1/categoria");
-    // return console.log(u.data.usuarios);
-    setCategorias(c.data.categoria);
-    //setPerfis(p.data);
+  async function carregar(paginaSolicitada = 1, substituir = true, termoBusca = busca) {
+    if (carregando) return;
+    setCarregando(true);
+    try {
+      const params = new URLSearchParams({ page: String(paginaSolicitada), limit: "20", busca: termoBusca.trim() });
+      const c = await api.get(`/api/v1/categoria?${params.toString()}`);
+      setCategorias((anteriores) => substituir ? c.data.categoria : [...anteriores, ...c.data.categoria]);
+      setPagina(paginaSolicitada);
+      setTemMais(Boolean(c.data.temMais));
+    } finally {
+      setCarregando(false);
+    }
   }
 
+  useEffect(() => {
+    if (buscaTimerRef.current) clearTimeout(buscaTimerRef.current);
+    buscaTimerRef.current = setTimeout(() => {
+      setPagina(1);
+      setTemMais(true);
+      carregar(1, true, busca).catch(() => setStatus("Não foi possível carregar as categorias."));
+    }, 250);
+    return () => clearTimeout(buscaTimerRef.current);
+  }, [busca]);
 
   useEffect(() => {
-    carregar().catch(() => setStatus("Não foi possível carregar as categorias."));
-  }, []);
+    const sentinela = sentinelaRef.current;
+    if (!sentinela) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && temMais && !carregando) {
+        carregar(pagina + 1, false, busca).catch(() => setStatus("Não foi possível carregar mais categorias."));
+      }
+    }, { rootMargin: "250px" });
+    observer.observe(sentinela);
+    return () => observer.disconnect();
+  }, [pagina, temMais, carregando, busca]);
 
-
-    const filtrados = useMemo(() => {
-      const q = busca.toLowerCase();
-      return categorias.filter((c) =>
-        [c.id, c.nome, c.tipo, c.ativo, c.criado_em, c.atualizado_em].some((v) =>
-          String(v || "").toLowerCase().includes(q)
-        )
-      );
-    }, [categorias, busca]);
 
 
   function novo() {
@@ -148,7 +168,7 @@ export default function Categoria() {
   return (
 
 
-      <div className="mx-auto max-w-7xl w-full min-w-0">
+    <div className="mx-auto max-w-7xl w-full min-w-0">
 
         <PageTitle
           title="Categorias"
@@ -161,11 +181,11 @@ export default function Categoria() {
           }
         />
 
-        {status && (
-                <div className="mb-5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-                  {status}
-                </div>
-              )}
+            {status && (
+              <div className="mb-5 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+                {status}
+              </div>
+            )}
         
               
         
@@ -222,7 +242,7 @@ export default function Categoria() {
                     <input
                       value={busca}
                       onChange={(e) => setBusca(e.target.value)}
-                      placeholder="Buscar usuário..."
+                      placeholder="Buscar categorias..."
                       className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500"
                     />
                   </div>
@@ -241,7 +261,7 @@ export default function Categoria() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filtrados.map((u) => (
+                      {categorias.map((u) => (
                         <tr key={u.id} className="hover:bg-slate-50">
                           <td className="text-center text-xs font-semibold text-slate-500">{new Date(u.criado_em).toLocaleDateString("pt-BR")}</td>
 
@@ -282,9 +302,29 @@ export default function Categoria() {
                   </table>
                 </div>
               </div>
-            </div>
-          );
-        }
+
+      {/* Sentinela do carregamento infinito */}
+      <div
+        ref={sentinelaRef}
+        className="flex min-h-12 items-center justify-center py-3"
+      >
+        {carregando && (
+          <span className="text-xs text-slate-500">
+            Carregando categorias...
+          </span>
+        )}
+
+        {!carregando && !temMais && categorias.length > 0 && (
+          <span className="text-xs text-slate-400">
+            Fim das categorias.
+          </span>
+        )}
+      </div>
+
+    </div>
+  );
+}
         
+      
 
 

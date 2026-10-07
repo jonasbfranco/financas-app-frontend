@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { BanknoteArrowDown, BanknoteArrowUp, Blocks, ShieldCheck, UserCheck, UserLockIcon, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../services/api";
 import PageTitle from "../components/PageTitle";
 import StatCard from "../components/StatCard";
@@ -11,6 +12,7 @@ import { getCurrentUser } from "../utils/auth";
 const Dashboard = () => {
 
   const user = getCurrentUser();
+  const [mesSelecionado, setMesSelecionado] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; });
   const [stats, setStats] = useState({
     saldo: "-",
     despesas_previstas: "-",
@@ -26,10 +28,18 @@ const Dashboard = () => {
   });
 
 useEffect(() => {
-    api.get("api/v1/dashboard/stats")
+    api.get(`api/v1/dashboard/stats?mes=${mesSelecionado}`)
       .then(({ data }) => setStats(data))
       .catch(() => {});
-  }, []);
+  }, [mesSelecionado]);
+
+  function navegarMes(delta) {
+    const [ano, mes] = mesSelecionado.split("-").map(Number);
+    const d = new Date(ano, mes - 1 + delta, 1);
+    setMesSelecionado(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);
+  }
+  const [anoMesAno, anoMesMes] = mesSelecionado.split("-").map(Number);
+  const nomesMeses = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 
   return (
 
@@ -38,6 +48,13 @@ useEffect(() => {
         title={`Olá, ${user?.nome?.split(" ")[0] || user?.login}`}
         description="Visão geral financeira."
       />
+
+      <div className="mb-5 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 w-fit">
+        <CalendarDays className="h-4 w-4 text-slate-500" />
+        <span className="text-xs font-bold text-slate-700">{nomesMeses[anoMesMes - 1]} {anoMesAno}</span>
+        <button type="button" onClick={() => navegarMes(-1)} aria-label="Mês anterior" className="rounded-lg p-1 hover:bg-slate-100"><ChevronLeft className="h-5 w-5" /></button>
+        <button type="button" onClick={() => navegarMes(1)} aria-label="Próximo mês" className="rounded-lg p-1 hover:bg-slate-100"><ChevronRight className="h-5 w-5" /></button>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         

@@ -77,6 +77,18 @@ function informacoesDoMes(mesSelecionado) {
   };
 }
 
+function converterValorBrasileiro(valorInformado) {
+  const texto = String(valorInformado ?? "").trim().replace(/R\$/gi, "").replace(/\s/g, "");
+  if (!texto) return NaN;
+  // Aceita 3456.00, 3456,00, 3.456,00 e 3456.
+  const normalizado = texto.includes(",")
+    ? texto.replace(/\./g, "").replace(",", ".")
+    : texto;
+  if (!/^-?\d+(\.\d{1,2})?$/.test(normalizado)) return NaN;
+  return Number(normalizado);
+}
+
+
 const emptyForm = {
   id: null,
   usuario_id: "",
@@ -101,6 +113,8 @@ export default function Transacoes() {
   const [pagina, setPagina] = useState(1);
   const [temMais, setTemMais] = useState(true);
   const [carregando, setCarregando] = useState(false);
+  const [erroValor, setErroValor] = useState("");
+  const buscaDebounceRef = useRef(null);
   const sentinelaRef = useRef(null);
 
   const informacoesMes = useMemo(
@@ -108,7 +122,7 @@ export default function Transacoes() {
     [mesSelecionado]
   );
 
-  async function carregar(paginaSolicitada = 1, substituir = true, mes = mesSelecionado) {
+  async function carregar(paginaSolicitada = 1, substituir = true, mes = mesSelecionado, termoBusca = busca) {
     if (carregando) return;
 
     setCarregando(true);
@@ -117,7 +131,8 @@ export default function Transacoes() {
       const params = new URLSearchParams({
         mes,
         page: String(paginaSolicitada),
-        limit: "20"
+        limit: "20",
+        busca: termoBusca.trim()
       });
 
       const requests = [
@@ -158,6 +173,32 @@ export default function Transacoes() {
   }, [mesSelecionado]);
 
   useEffect(() => {
+    // A busca é executada no servidor para encontrar também registros ainda não carregados.
+    if (buscaDebounceRef.current) clearTimeout(buscaDebounceRef.current);
+    buscaDebounceRef.current = setTimeout(() => {
+      setPagina(1);
+      setTemMais(true);
+      carregar(1, true, mesSelecionado, busca).catch(() =>
+        setStatus("Não foi possível pesquisar as transações.")
+      );
+    }, 300);
+    return () => clearTimeout(buscaDebounceRef.current);
+  }, [busca, mesSelecionado]);
+
+  useEffect(() => {
+    // A busca é executada no servidor para encontrar também registros ainda não carregados.
+    if (buscaDebounceRef.current) clearTimeout(buscaDebounceRef.current);
+    buscaDebounceRef.current = setTimeout(() => {
+      setPagina(1);
+      setTemMais(true);
+      carregar(1, true, mesSelecionado, busca).catch(() =>
+        setStatus("Não foi possível pesquisar as transações.")
+      );
+    }, 300);
+    return () => clearTimeout(buscaDebounceRef.current);
+  }, [busca, mesSelecionado]);
+
+  useEffect(() => {
     const sentinela = sentinelaRef.current;
     if (!sentinela) return;
 
@@ -166,7 +207,7 @@ export default function Transacoes() {
         const [entry] = entries;
 
         if (entry.isIntersecting && temMais && !carregando) {
-          carregar(pagina + 1, false).catch(() =>
+          carregar(pagina + 1, false, mesSelecionado, busca).catch(() =>
             setStatus("Não foi possível carregar mais transações.")
           );
         }
@@ -177,7 +218,7 @@ export default function Transacoes() {
     observer.observe(sentinela);
 
     return () => observer.disconnect();
-  }, [pagina, temMais, carregando, mesSelecionado]);
+  }, [pagina, temMais, carregando, mesSelecionado, busca]);
 
   function navegarMes(quantidade) {
     setStatus("");
@@ -190,12 +231,8 @@ export default function Transacoes() {
 
   const filtrados = useMemo(() => {
     const q = busca.toLowerCase();
-    return transacoes.filter((t) =>
-      [t.categoria_id, t.data, t.tipo, t.valor, t.forma_pagamento, t.status, t.descricao].some((v) =>
-        String(v || "").toLowerCase().includes(q)
-      )
-    );
-  }, [transacoes, busca]);
+    return transacoes;
+  }, [transacoes]);
 
 
 
@@ -260,8 +297,15 @@ export default function Transacoes() {
 
   async function salvar(e) {
     e.preventDefault();
+    setErroValor("");
+    const valorNumerico = converterValorBrasileiro(form.valor);
+    if (!Number.isFinite(valorNumerico) || valorNumerico === 0) {
+      setErroValor("Informe um valor válido, maior ou menor que zero, com até duas casas decimais. Ex.: 3.456,00.");
+      setStatus("Corrija o campo Valor antes de salvar.");
+      return;
+    }
     try {
-      const payload = { ...form };
+      const payload = { ...form, valor: valorNumerico };
       // if (!payload.senha) delete payload.senha;
       // if (!payload.usuario_id) payload.user.id;
 
@@ -380,7 +424,9 @@ export default function Transacoes() {
                 <span className="px-4 py-3 flex w-11 shrink-0 items-center justify-center border-r border-slate-200 bg-slate-50 text-sm text-slate-500">
                   R$
                 </span>
-                <input required placeholder="Valor" value={form.valor} onChange={(e) => setForm({...form, valor:e.target.value})} className="min-w-full rounded-xl border=0 border-slate-300 px-4 py-3 outline-none" />
+                <input required inputMode="decimal" placeholder="Ex.: 3.456,00" value={form.valor} aria-invalid={Boolean(erroValor)} onChange={(e) => { setForm({...form, valor:e.target.value}); setErroValor(""); }} className={`min-w-full rounded-xl border px-4 py-3 outline-none ${erroValor ? "border-red-500" : "border-slate-300"}`} />
+              </div>
+              {erroValor && <p className="mt-1 text-xs text-red-600" role="alert">{erroValor}</p>}
               </div>
             </div>
 
@@ -424,7 +470,6 @@ export default function Transacoes() {
               </button>
             </div>
             
-          </div>
         </form>
       )}
 
@@ -468,7 +513,7 @@ export default function Transacoes() {
             <input
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar transação..."
+              placeholder="Buscar todas as transações deste mês..."
               className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-blue-500"
             />
           </div>
